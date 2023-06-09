@@ -23,14 +23,6 @@ ENV NODE_ENV=development \
     TMP_DIR=/mnt/tmp \
     WORKDIR=/app
 
-ARG GROUP_ID=1000
-ARG USER_ID=1000
-
-# Install Node
-# https://github.com/nodejs/docker-node/blob/main/14/buster/Dockerfile
-RUN groupadd --gid $GROUP_ID node \
-  && useradd --uid $USER_ID --gid node --shell /bin/bash --create-home node
-
 RUN echo "Installing node" \
   && NODE_VERSION='16.19.0' \
   && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
@@ -85,10 +77,6 @@ ENV PATH="${WORKDIR}/bin:${WORKDIR}/node_modules/.bin:${PATH}"
 
 WORKDIR ${WORKDIR}
 
-RUN echo "Configuring folder permissions" \
-    && mkdir ${TMP_DIR} \
-    && chown -R node:node ${TMP_DIR} ${WORKDIR}
-
 ENV npm_config_cache="${TMP_DIR}/npm-cache" \
     npm_config_store_dir="${TMP_DIR}/pnpm-store"
 
@@ -112,15 +100,6 @@ RUN echo "Installing ripgrep" \
     && chmod +x /usr/local/bin/rg \
     && echo "Cleaning up" \
     && rm -rf ./ripgrep*
-
-RUN echo "Disabling Shopify CLI telemetry" \
-    && mkdir -p /home/node/.config/shopify \
-    && printf "[analytics]\nenabled = false\n" > /home/node/.config/shopify/config \
-    && chown -R node:node /home/node/.config \
-    && echo 'Configuring Shopify CLI environment variable aliases' \
-    && printf '\nexport SHOPIFY_FLAG_STORE=$SHOPIFY_SHOP\n' >> /home/node/.bash_aliases \
-    && printf '\nexport SHOPIFY_CLI_THEME_TOKEN=$SHOPIFY_CLI_ADMIN_AUTH_TOKEN\n' >> /home/node/.bash_aliases \
-    && chown node:node /home/node/.bash_aliases
 
 COPY --from=sass /root/sass /usr/local/bin/sass
 
