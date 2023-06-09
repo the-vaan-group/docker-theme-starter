@@ -84,7 +84,14 @@ RUN echo "Installing pnpm" \
     && PNPM_VERSION='7.29.1' \
     && npm install -g "pnpm@${PNPM_VERSION}"
 
-RUN echo "Installing ripgrep" \
+COPY --from=sass /root/sass /usr/local/bin/sass
+
+RUN echo 'Configuring permissions for Sass binary' \
+    && chmod +x /usr/local/bin/sass
+
+RUN echo "Installing development tools" \
+    && echo "====================" \
+    && echo "Installing ripgrep" \
     && RIPGREP_VERSION='v13.0.0-4' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
@@ -99,14 +106,9 @@ RUN echo "Installing ripgrep" \
     && cp -fv ./rg /usr/local/bin \
     && chmod +x /usr/local/bin/rg \
     && echo "Cleaning up" \
-    && rm -rf ./ripgrep*
-
-COPY --from=sass /root/sass /usr/local/bin/sass
-
-RUN echo 'Configuring permissions for Sass binary' \
-    && chmod +x /usr/local/bin/sass
-
-RUN echo "Installing watchexec" \
+    && rm -rf ./ripgrep* \
+    && echo "====================" \
+    && echo "Installing watchexec" \
     && WATCHEXEC_VERSION='1.22.3' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
@@ -123,9 +125,9 @@ RUN echo "Installing watchexec" \
     && cp -fv "./watchexec-${WATCHEXEC_VERSION}-${ARCH}/watchexec" /usr/local/bin \
     && chmod +x /usr/local/bin/watchexec \
     && echo "Cleaning up" \
-    && rm -rf ./watchexec*
-
-RUN echo "Installing Hivemind" \
+    && rm -rf ./watchexec* \
+    && echo "===================" \
+    && echo "Installing Hivemind" \
     && HIVEMIND_VERSION='1.0.6' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
