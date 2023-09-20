@@ -109,7 +109,7 @@ RUN echo "Installing development tools" \
     && rm -rf ./ripgrep* \
     && echo "====================" \
     && echo "Installing watchexec" \
-    && WATCHEXEC_VERSION='1.22.3' \
+    && WATCHEXEC_VERSION='1.23.0' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
       amd64) ARCH='x86_64-unknown-linux-musl';; \
