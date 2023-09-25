@@ -1,18 +1,20 @@
 #### SASS
-FROM dart:2.15.0 as sass
+FROM bufbuild/buf:1.26.1 AS buf
+FROM dart:3.1.2 as sass
 
-ENV SASS_VERSION='1.44.0'
+ENV SASS_VERSION='1.68.0'
+
+# Include Protocol Buffer binary
+COPY --from=buf /usr/local/bin/buf /usr/local/bin/
 
 RUN echo "Downloading Dart Sass source" \
     && curl -fsSL --compressed -o ./dart-sass.tar.gz "https://github.com/sass/dart-sass/archive/refs/tags/${SASS_VERSION}.tar.gz" \
-    && tar -xf ./dart-sass.tar.gz
-
-RUN echo "Fetching Dart Sass dependencies" \
+    && tar -xf ./dart-sass.tar.gz \
+    && echo "Fetching Dart Sass dependencies" \
     && cd "dart-sass-${SASS_VERSION}" \
-    && dart pub get
-
-RUN echo "Building Dart Sass" \
-    && cd "dart-sass-${SASS_VERSION}" \
+    && dart pub get \
+    && dart run grinder protobuf \
+    && echo "Building Dart Sass" \
     && dart compile exe bin/sass.dart -Dversion=${SASS_VERSION} -o /root/sass
 
 #### MAIN
@@ -24,7 +26,7 @@ ENV NODE_ENV=development \
     WORKDIR=/app
 
 RUN echo "Installing node" \
-  && NODE_VERSION='16.19.0' \
+  && NODE_VERSION='18.18.0' \
   && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && case "${dpkgArch##*-}" in \
     amd64) ARCH='x64';; \
@@ -81,7 +83,7 @@ ENV npm_config_cache="${TMP_DIR}/npm-cache" \
     npm_config_store_dir="${TMP_DIR}/pnpm-store"
 
 RUN echo "Installing pnpm" \
-    && PNPM_VERSION='7.29.1' \
+    && PNPM_VERSION='8.7.6' \
     && npm install -g "pnpm@${PNPM_VERSION}"
 
 COPY --from=sass /root/sass /usr/local/bin/sass
