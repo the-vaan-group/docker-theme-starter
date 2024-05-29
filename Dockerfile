@@ -92,7 +92,28 @@ RUN echo 'Configuring permissions for Sass binary' \
     && chmod +x /usr/local/bin/sass
 
 RUN echo "Installing development tools" \
-    && echo "====================" \
+    && echo "===================" \
+    && echo "Installing babashka" \
+    && BABASHKA_VERSION='1.3.190' \
+    && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
+    && case "${dpkgArch##*-}" in \
+      amd64) ARCH='amd64';; \
+      arm64) ARCH='aarch64';; \
+      *) echo "unsupported architecture -- ${dpkgArch##*-}"; exit 1 ;; \
+    esac \
+    && set -ex \
+    && cd $TMP_DIR \
+    && curl -fsSL --compressed --output bb.tar.gz \
+      "https://github.com/babashka/babashka/releases/download/v${BABASHKA_VERSION}/babashka-${BABASHKA_VERSION}-linux-${ARCH}-static.tar.gz" \
+    && curl -fsSL --output bb.tar.gz.sha256 \
+      "https://github.com/babashka/babashka/releases/download/v${BABASHKA_VERSION}/babashka-${BABASHKA_VERSION}-linux-${ARCH}-static.tar.gz.sha256" \
+    && echo "$(cat bb.tar.gz.sha256) bb.tar.gz" | sha256sum --check --status \
+    && tar -xf ./bb.tar.gz \
+    && cp -fv bb /usr/local/bin \
+    && chmod +x /usr/local/bin/bb \
+    && echo "Cleaning up" \
+    && rm -rf ./bb* \
+    && echo "==================" \
     && echo "Installing ripgrep" \
     && RIPGREP_VERSION='v13.0.0-4' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
