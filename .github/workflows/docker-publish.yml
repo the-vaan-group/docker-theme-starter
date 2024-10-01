@@ -24,12 +24,13 @@ jobs:
       - name: Set outputs
         id: set-outputs
         run: |
-          echo 'image=ghcr.io/the-vaan-group/${{ env.IMAGE_NAME }}' >> "${GITHUB_OUTPUT}"
+          IMAGE_NAME=$(echo '${{ github.event.repository.name }}' | sed 's|^docker-||')
+          echo "image=ghcr.io/${{ github.repository_owner }}/${IMAGE_NAME}" >> "${GITHUB_OUTPUT}"
           # Only enable push on push events or pull requests coming from the same repository, except from dependabot
           echo 'push=${{ github.event_name == 'push' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' }}' >> "${GITHUB_OUTPUT}"
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ${{ steps.set-outputs.outputs.image }}
@@ -47,18 +48,21 @@ jobs:
   build:
     needs:
       - prepare
-    runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
+        os:
+          - linux
+        arch:
+          - amd64
+          - arm64
+
+    runs-on: "vaan-${{ matrix.os }}-${{ matrix.arch }}"
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -75,11 +79,11 @@ jobs:
         id: cache-flags
         run: |
           # Set the cache-to output
-          echo 'cache-to=type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}' >> "${GITHUB_OUTPUT}"
+          echo 'cache-to=type=gha,scope=${{ github.ref_name }}-${{ matrix.os }}/${{ matrix.arch }}' >> "${GITHUB_OUTPUT}"
 
           # Set the cache-from output
           if [[ '${{ github.event_name }}' == 'push' ]]; then
-            echo 'cache-from=type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}' >> "${GITHUB_OUTPUT}"
+            echo 'cache-from=type=gha,scope=${{ github.ref_name }}-${{ matrix.os }}/${{ matrix.arch }}' >> "${GITHUB_OUTPUT}"
           else
             # Use cache from target branch too when building a pull request
 
@@ -90,8 +94,8 @@ jobs:
             echo "cache-from<<${EOF}" >> "${GITHUB_OUTPUT}"
 
             printf '%s\n' \
-              "type=gha,scope=${{ github.ref_name }}-${{ matrix.platform }}" \
-              "type=gha,scope=${{ github.base_ref }}-${{ matrix.platform }}" \
+              "type=gha,scope=${{ github.ref_name }}-${{ matrix.os }}/${{ matrix.arch }}" \
+              "type=gha,scope=${{ github.base_ref }}-${{ matrix.os }}/${{ matrix.arch }}" \
               >> "${GITHUB_OUTPUT}"
 
             echo "${EOF}" >> "${GITHUB_OUTPUT}"
@@ -102,7 +106,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          platforms: ${{ matrix.platform }}
+          platforms: ${{ matrix.os }}/${{ matrix.arch }}
           labels: ${{ needs.prepare.outputs.meta-labels }}
           outputs: |
             type=image,name=${{ needs.prepare.outputs.image }},push-by-digest=true,name-canonical=true,push=${{ needs.prepare.outputs.push }}
