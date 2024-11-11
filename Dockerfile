@@ -1,8 +1,8 @@
 #### SASS
-FROM bufbuild/buf:1.32.2 AS buf
-FROM dart:3.4.1 as sass
+FROM bufbuild/buf:1.43.0 AS buf
+FROM dart:3.5.1 as sass
 
-ENV SASS_VERSION='1.77.5'
+ENV SASS_VERSION='1.80.6'
 
 # Include Protocol Buffer binary
 COPY --from=buf /usr/local/bin/buf /usr/local/bin/
