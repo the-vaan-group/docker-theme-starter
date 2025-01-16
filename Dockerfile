@@ -1,22 +1,3 @@
-#### SASS
-FROM bufbuild/buf:1.43.0 AS buf
-FROM dart:3.5.1 as sass
-
-ENV SASS_VERSION='1.80.6'
-
-# Include Protocol Buffer binary
-COPY --from=buf /usr/local/bin/buf /usr/local/bin/
-
-RUN echo "Downloading Dart Sass source" \
-    && curl -fsSL --compressed -o ./dart-sass.tar.gz "https://github.com/sass/dart-sass/archive/refs/tags/${SASS_VERSION}.tar.gz" \
-    && tar -xf ./dart-sass.tar.gz \
-    && echo "Fetching Dart Sass dependencies" \
-    && cd "dart-sass-${SASS_VERSION}" \
-    && dart pub get \
-    && dart run grinder protobuf \
-    && echo "Building Dart Sass" \
-    && dart compile exe bin/sass.dart -Dversion=${SASS_VERSION} -o /root/sass
-
 #### MAIN
 FROM ruby:3.1.6-bookworm as main
 
@@ -91,11 +72,6 @@ ENV npm_config_cache="${TMP_DIR}/npm-cache" \
 RUN echo "Installing pnpm" \
     && PNPM_VERSION='9.4.0' \
     && npm install -g "pnpm@${PNPM_VERSION}"
-
-COPY --from=sass /root/sass /usr/local/bin/sass
-
-RUN echo 'Configuring permissions for Sass binary' \
-    && chmod +x /usr/local/bin/sass
 
 RUN echo "Installing development tools" \
     && echo "===================" \
