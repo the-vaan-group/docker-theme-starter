@@ -50,9 +50,17 @@ RUN echo "Installing node" \
   && echo 'Done'
 
 RUN echo 'Installing build dependencies' \
+    && set -ex \
+    && FISH_VERSION='3.7.1-1' \
+    && (echo 'deb http://download.opensuse.org/repositories/shells:/fish:/release:/3/Debian_12/ /' \
+        | tee /etc/apt/sources.list.d/shells:fish:release:3.list) \
+    && (curl -fsSL https://download.opensuse.org/repositories/shells:fish:release:3/Debian_12/Release.key \
+        | gpg --dearmor \
+        | tee /etc/apt/trusted.gpg.d/shells_fish_release_3.gpg > /dev/null) \
     && apt-get update \
     && apt-get --assume-yes --no-install-recommends install \
         fd-find \
+        fish="${FISH_VERSION}" \
         jq \
         parallel \
         rsync \
