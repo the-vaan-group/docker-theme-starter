@@ -1,5 +1,5 @@
 #### MAIN
-FROM ruby:3.1.6-bookworm as main
+FROM ruby:3.1.6-bookworm AS main
 
 ENV NODE_ENV=development \
     SHELL=/bin/bash \
@@ -68,7 +68,8 @@ RUN echo 'Installing build dependencies' \
         zip \
     && echo 'Cleaning up' \
     && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /var/cache/apt
+    && rm -rf /var/cache/apt \
+    && echo 'DONE'
 
 ENV PATH="${WORKDIR}/bin:${WORKDIR}/node_modules/.bin:${PATH}"
 
@@ -155,4 +156,28 @@ RUN echo "Installing development tools" \
     && cp -fv "./hivemind-v${HIVEMIND_VERSION}-linux-${ARCH}" /usr/local/bin/hivemind \
     && chmod +x /usr/local/bin/hivemind \
     && echo "Cleaning up" \
-    && rm -rf ./hivemind*
+    && rm -rf ./hivemind* \
+    && echo '==============================' \
+    && echo 'Installing Starship prompt' \
+    && STARSHIP_VERSION='1.22.1' \
+    && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
+    && case "${dpkgArch##*-}" in \
+      amd64) ARCH='x86_64';; \
+      arm64) ARCH='aarch64';; \
+      *) echo "unsupported architecture -- ${dpkgArch##*-}"; exit 1 ;; \
+    esac \
+    && set -ex \
+    && cd $TMP_DIR \
+    && curl -fsSL --compressed --output starship.tar.gz \
+      "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/starship-${ARCH}-unknown-linux-musl.tar.gz" \
+    && curl -fsSL --output starship.tar.gz.sha256 \
+      "https://github.com/starship/starship/releases/download/v${STARSHIP_VERSION}/starship-${ARCH}-unknown-linux-musl.tar.gz.sha256" \
+    && echo "$(cat starship.tar.gz.sha256) starship.tar.gz" | sha256sum --check --status \
+    && tar -xf ./starship.tar.gz \
+    && cp -fv starship /usr/local/bin \
+    && chmod +x /usr/local/bin/starship \
+    && echo "Cleaning up" \
+    && rm -rf ./starship* \
+    && echo "Smoke test" \
+    && starship --version \
+    && echo 'DONE'
