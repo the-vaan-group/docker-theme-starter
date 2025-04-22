@@ -79,6 +79,27 @@ RUN echo "Installing pnpm" \
     && npm install -g "pnpm@${PNPM_VERSION}"
 
 RUN echo "Installing development tools" \
+    && echo "====================" \
+    && echo "Installing Bun" \
+    && BUN_VERSION='1.2.10' \
+    && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
+    && case "${dpkgArch##*-}" in \
+      amd64) ARCH='x64';; \
+      arm64) ARCH='aarch64';; \
+      *) echo "unsupported architecture -- ${dpkgArch##*-}"; exit 1 ;; \
+    esac \
+    && set -ex \
+    && cd $TMP_DIR \
+    && curl -fsSLO --compressed "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-${ARCH}.zip" \
+    && curl -fsSL "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/SHASUMS256.txt" | grep 'linux' | grep "${ARCH}.zip" > bunsums \
+    && sha256sum --check bunsums --status \
+    && unzip "bun-linux-${ARCH}.zip" \
+    && cp -fv "bun-linux-${ARCH}/bun" /usr/local/bin/bun \
+    && chmod +x /usr/local/bin/bun \
+    && echo "Smoke test" \
+    && bun --version \
+    && echo "Cleaning up" \
+    && rm -rf ./bun* \
     && echo "===================" \
     && echo "Installing babashka" \
     && BABASHKA_VERSION='1.3.190' \
