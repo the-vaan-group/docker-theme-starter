@@ -7,7 +7,7 @@ ENV NODE_ENV=development \
     WORKDIR=/app
 
 RUN echo "Installing node" \
-  && NODE_VERSION='22.13.0' \
+  && NODE_VERSION='22.15.0' \
   && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && case "${dpkgArch##*-}" in \
     amd64) ARCH='x64';; \
@@ -75,8 +75,10 @@ ENV npm_config_cache="${TMP_DIR}/npm-cache" \
     npm_config_store_dir="${TMP_DIR}/pnpm-store"
 
 RUN echo "Installing pnpm" \
-    && PNPM_VERSION='9.15.4' \
-    && npm install -g "pnpm@${PNPM_VERSION}"
+    && PNPM_VERSION='10.9.0' \
+    && npm install -g "pnpm@${PNPM_VERSION}" \
+    && pnpm --version \
+    && echo 'Done'
 
 RUN echo "Installing development tools" \
     && echo "====================" \
