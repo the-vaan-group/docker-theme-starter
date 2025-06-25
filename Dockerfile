@@ -83,10 +83,11 @@ RUN echo "Installing pnpm" \
 RUN echo "Installing development tools" \
     && echo "====================" \
     && echo "Installing Bun" \
+    && echo 'Note: we have to use baseline version for VirtualBox because of missing AVX2 support' \
     && BUN_VERSION='1.2.10' \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
-      amd64) ARCH='x64';; \
+      amd64) ARCH='x64-baseline';; \
       arm64) ARCH='aarch64';; \
       *) echo "unsupported architecture -- ${dpkgArch##*-}"; exit 1 ;; \
     esac \
